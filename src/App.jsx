@@ -195,6 +195,7 @@ function WatchPage() {
   const [hasStarted, setHasStarted] = useState(false);
   const [error, setError] = useState('');
   const [joined, setJoined] = useState(false);
+  const [showOverlay, setShowOverlay] = useState(false); // Overlay state
   const { onSyncCmd, onPing, onVideoState, socket } = useSocket(room, 'watcher');
   const [containerRef, playerRef] = useYouTubePlayer(videoId, videoId ? {
     playerVars: {
@@ -242,13 +243,18 @@ function WatchPage() {
 
   useEffect(() => {
     if (!videoId || !onSyncCmd) return;
-    const cleanup = onSyncCmd((cmd) => {
+    const cleanup = onSyncCmd(async (cmd) => {
       if (!playerRef.current) return;
       if (typeof cmd.time === 'number') {
         playerRef.current.seekTo(cmd.time, true);
       }
       if (cmd.type === 'play') {
-        playerRef.current.playVideo();
+        try {
+          await playerRef.current.playVideo();
+          setShowOverlay(false);
+        } catch (e) {
+          setShowOverlay(true); // Show overlay if autoplay fails
+        }
         setStatus('Playing');
         setHasStarted(true);
       } else if (cmd.type === 'pause') {
@@ -274,6 +280,14 @@ function WatchPage() {
     return cleanup;
   }, [onPing, playerRef, videoId]);
 
+  // Handler for overlay click
+  const handleOverlayClick = async () => {
+    if (playerRef.current) {
+      await playerRef.current.playVideo();
+      setShowOverlay(false);
+    }
+  };
+
   if (!room) {
     return <div style={{ color: 'var(--color-error)', marginTop: 32, textAlign: 'center' }}>Missing or invalid room parameter. Please check your link or ask the host for the correct Meeting ID.</div>;
   }
@@ -287,10 +301,40 @@ function WatchPage() {
         </div>
         {error && <div style={{ color: 'var(--color-error)', marginTop: 16 }}>{error}</div>}
       </div>
-      <div className="glass-card" style={{ margin: '0 auto', maxWidth: 700, display: 'flex', flexDirection: 'column', alignItems: 'center', minHeight: 420, justifyContent: 'center' }}>
+      <div className="glass-card" style={{ margin: '0 auto', maxWidth: 700, display: 'flex', flexDirection: 'column', alignItems: 'center', minHeight: 420, justifyContent: 'center', position: 'relative' }}>
         <div style={{ fontWeight: 600, fontSize: 18, marginBottom: 8 }}>Now Playing</div>
-        <div ref={containerRef} id="player" style={{ width: 640, height: 390, borderRadius: 12, overflow: 'hidden', boxShadow: '0 4px 32px 0 rgba(127,90,240,0.18)', background: '#111', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <div ref={containerRef} id="player" style={{ width: 640, height: 390, borderRadius: 12, overflow: 'hidden', boxShadow: '0 4px 32px 0 rgba(127,90,240,0.18)', background: '#111', display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative' }}>
           {!videoId && <span style={{ color: '#fff' }}>Waiting for host to start the video...</span>}
+          {showOverlay && (
+            <div style={{
+              position: 'absolute',
+              top: 0,
+              left: 0,
+              width: '100%',
+              height: '100%',
+              background: 'rgba(0,0,0,0.7)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              zIndex: 10,
+              flexDirection: 'column',
+            }}>
+              <button onClick={handleOverlayClick} style={{
+                padding: '18px 36px',
+                fontSize: 22,
+                borderRadius: 12,
+                border: 'none',
+                background: 'var(--color-accent)',
+                color: '#fff',
+                fontWeight: 700,
+                cursor: 'pointer',
+                boxShadow: '0 2px 12px 0 rgba(127,90,240,0.18)'
+              }}>
+                Click to Start Watching
+              </button>
+              <div style={{ color: '#fff', marginTop: 16, fontSize: 16 }}>Your browser blocked autoplay. Click to start the video.</div>
+            </div>
+          )}
         </div>
         {videoId && <div style={{marginTop: 8, color: 'var(--color-text-muted)' }}>Video ID: <code>{videoId}</code></div>}
         <div style={{marginTop: 8, color: '#0074D9'}}>{status}</div>
