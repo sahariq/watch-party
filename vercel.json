@@ -1,0 +1,5 @@
+{
+  "rewrites": [
+    { "source": "/watch-party/(.*)", "destination": "/watch-party/index.html" }
+  ]
+} 

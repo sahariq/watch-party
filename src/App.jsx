@@ -21,16 +21,6 @@ function LandingPage() {
           <div style={{ color: 'var(--color-text-muted)', fontSize: 14 }}>Everyone stays in perfect sync</div>
         </div>
         <div className="feature-card">
-          <span role="img" aria-label="chat" style={{ fontSize: 32 }}>💬</span>
-          <div style={{ fontWeight: 600, marginTop: 8 }}>Real-Time Chat</div>
-          <div style={{ color: 'var(--color-text-muted)', fontSize: 14 }}>Chat and react live with friends</div>
-        </div>
-        <div className="feature-card">
-          <span role="img" aria-label="emoji" style={{ fontSize: 32 }}>🎉</span>
-          <div style={{ fontWeight: 600, marginTop: 8 }}>Emoji Reactions</div>
-          <div style={{ color: 'var(--color-text-muted)', fontSize: 14 }}>Express yourself with floating emojis</div>
-        </div>
-        <div className="feature-card">
           <span role="img" aria-label="mobile" style={{ fontSize: 32 }}>📱</span>
           <div style={{ fontWeight: 600, marginTop: 8 }}>Mobile Friendly</div>
           <div style={{ color: 'var(--color-text-muted)', fontSize: 14 }}>Works beautifully on any device</div>
@@ -40,10 +30,13 @@ function LandingPage() {
   );
 }
 
+function generateMeetingId() {
+  // 8-digit alphanumeric
+  return Math.random().toString(36).substr(2, 8).toUpperCase();
+}
+
 function HostPage() {
-  const [meetingId, setMeetingId] = useState('');
-  const [meetingIdInput, setMeetingIdInput] = useState('');
-  const [meetingIdError, setMeetingIdError] = useState('');
+  const [meetingId] = useState(generateMeetingId());
   const [videoInput, setVideoInput] = useState('');
   const [videoId, setVideoId] = useState(null);
   const [status, setStatus] = useState('');
@@ -75,16 +68,6 @@ function HostPage() {
       emitVideoInfo({ videoId, roomId: meetingId });
     }
   }, [socket, meetingId, videoId, emitVideoInfo]);
-
-  function handleMeetingIdSubmit(e) {
-    e.preventDefault();
-    if (!meetingIdInput.trim()) {
-      setMeetingIdError('Meeting ID cannot be empty.');
-      return;
-    }
-    setMeetingId(meetingIdInput.trim());
-    setMeetingIdError('');
-  }
 
   function handleVideoInputSubmit(e) {
     e.preventDefault();
@@ -121,9 +104,8 @@ function HostPage() {
     const interval = setInterval(() => {
       if (playerRef.current) {
         emitPing({ time: playerRef.current.getCurrentTime(), roomId: meetingId });
-        // console.log('[HOST] Emitting ping:', { time: playerRef.current.getCurrentTime(), roomId: meetingId });
       }
-    }, 1000); // 1 second for tighter sync
+    }, 1000);
     return () => clearInterval(interval);
   }, [meetingId, playerRef, emitPing]);
 
@@ -137,59 +119,37 @@ function HostPage() {
           </div>
         </div>
         <div style={{ marginTop: 12, color: 'var(--color-text-muted)' }}>
-          {meetingId ? `Room Code: ${meetingId}` : 'Set a room code to start your party.'}
+          Room Code: {meetingId}
         </div>
       </div>
-      {!meetingId ? (
-        <form onSubmit={handleMeetingIdSubmit} className="glass-card" style={{ maxWidth: 400, margin: '0 auto' }}>
-          <label style={{ fontWeight: 600, fontSize: 18 }}>Enter Meeting ID:</label>
-          <input
-            type="text"
-            value={meetingIdInput}
-            onChange={e => setMeetingIdInput(e.target.value)}
-            placeholder="e.g. party123"
-            style={{ margin: '16px 0', width: '100%', padding: '0.7rem', borderRadius: 8, border: 'none', fontSize: 16 }}
-          />
-          <button className="accent-gradient" type="submit" style={{ width: '100%' }}>Set Meeting ID</button>
-          {meetingIdError && <div style={{ color: 'var(--color-error)', marginTop: 8 }}>{meetingIdError}</div>}
-        </form>
-      ) : (
-        <>
-          <RoomLinkGenerator meetingId={meetingId} />
-          <form onSubmit={handleVideoInputSubmit} className="glass-card" style={{ maxWidth: 500, margin: '0 auto', marginBottom: 32 }}>
-            <label style={{ fontWeight: 600, fontSize: 18 }}>Enter a YouTube video link:</label>
-            <input
-              type="text"
-              value={videoInput}
-              onChange={e => setVideoInput(e.target.value)}
-              placeholder="https://www.youtube.com/watch?v=..."
-              style={{ margin: '16px 0', width: '100%', padding: '0.7rem', borderRadius: 8, border: 'none', fontSize: 16 }}
-            />
-            <button className="accent-gradient" type="submit" style={{ width: '100%' }}>Load Video</button>
-            {status && <div style={{ color: 'var(--color-success)', marginTop: 8 }}>{status}</div>}
-          </form>
-          {videoId && (
-            <div className="glass-card" style={{ margin: '0 auto', maxWidth: 700, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-              <div style={{ fontWeight: 600, fontSize: 18, marginBottom: 8 }}>Now Playing</div>
-              <div ref={containerRef} id="player" style={{ width: 640, height: 390, borderRadius: 12, overflow: 'hidden', boxShadow: '0 4px 32px 0 rgba(127,90,240,0.18)' }} />
-              <div style={{marginTop: 8, color: 'var(--color-text-muted)' }}>Video ID: <code>{videoId}</code></div>
-              <div style={{marginTop: 8, color: '#0074D9'}}>{status}</div>
-            </div>
-          )}
-        </>
+      <RoomLinkGenerator meetingId={meetingId} />
+      <form onSubmit={handleVideoInputSubmit} className="glass-card" style={{ maxWidth: 500, margin: '0 auto', marginBottom: 32 }}>
+        <label style={{ fontWeight: 600, fontSize: 18 }}>Enter a YouTube video link:</label>
+        <input
+          type="text"
+          value={videoInput}
+          onChange={e => setVideoInput(e.target.value)}
+          placeholder="https://www.youtube.com/watch?v=..."
+          style={{ margin: '16px 0', width: '100%', padding: '0.7rem', borderRadius: 8, border: 'none', fontSize: 16 }}
+        />
+        <button className="accent-gradient" type="submit" style={{ width: '100%' }}>Load Video</button>
+        {status && <div style={{ color: 'var(--color-success)', marginTop: 8 }}>{status}</div>}
+      </form>
+      {videoId && (
+        <div className="glass-card" style={{ margin: '0 auto', maxWidth: 700, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+          <div style={{ fontWeight: 600, fontSize: 18, marginBottom: 8 }}>Now Playing</div>
+          <div ref={containerRef} id="player" style={{ width: 640, height: 390, borderRadius: 12, overflow: 'hidden', boxShadow: '0 4px 32px 0 rgba(127,90,240,0.18)' }} />
+          <div style={{marginTop: 8, color: 'var(--color-text-muted)' }}>Video ID: <code>{videoId}</code></div>
+          <div style={{marginTop: 8, color: '#0074D9'}}>{status}</div>
+        </div>
       )}
     </div>
   );
 }
 
-function useRoomQuery() {
-  const { search } = useLocation();
-  const params = new URLSearchParams(search);
-  return params.get('room');
-}
-
 function WatchPage() {
-  const room = useRoomQuery();
+  const [meetingIdInput, setMeetingIdInput] = useState('');
+  const [room, setRoom] = useState('');
   const [videoId, setVideoId] = useState(null);
   const [status, setStatus] = useState('Waiting for host to start...');
   const [hasStarted, setHasStarted] = useState(false);
@@ -214,6 +174,14 @@ function WatchPage() {
 
   function onPlayerReady(event) {
     setStatus('Player ready. Waiting for host to start playback...');
+  }
+
+  // Handler for Meeting ID form submit
+  function handleMeetingIdSubmit(e) {
+    e.preventDefault();
+    if (meetingIdInput.trim()) {
+      setRoom(meetingIdInput.trim());
+    }
   }
 
   useEffect(() => {
@@ -271,14 +239,26 @@ function WatchPage() {
     if (!videoId || !onPing) return;
     const cleanup = onPing((ping) => {
       if (!playerRef.current) return;
-      const localTime = playerRef.current.getCurrentTime();
-      if (Math.abs(localTime - ping.time) > 0.3) {
-        playerRef.current.seekTo(ping.time, true);
-        setStatus('Auto-corrected drift');
-      }
+      // Always correct drift, not just if > 0.3s
+      playerRef.current.seekTo(ping.time, true);
+      setStatus('Auto-corrected drift');
     });
     return cleanup;
   }, [onPing, playerRef, videoId]);
+
+  useEffect(() => {
+    if (!socket) return;
+    const handleHostDisconnected = () => {
+      setStatus('The host has left the party. Playback will not be synchronized until the host returns.');
+      if (playerRef.current) {
+        playerRef.current.pauseVideo();
+      }
+    };
+    socket.on('host-disconnected', handleHostDisconnected);
+    return () => {
+      socket.off('host-disconnected', handleHostDisconnected);
+    };
+  }, [socket, playerRef]);
 
   // Handler for overlay click
   const handleOverlayClick = async () => {
@@ -289,7 +269,25 @@ function WatchPage() {
   };
 
   if (!room) {
-    return <div style={{ color: 'var(--color-error)', marginTop: 32, textAlign: 'center' }}>Missing or invalid room parameter. Please check your link or ask the host for the correct Meeting ID.</div>;
+    return (
+      <div style={{ maxWidth: 400, margin: '48px auto', padding: 24, border: '1px solid #eee', borderRadius: 8, background: '#fff' }}>
+        <div style={{ fontWeight: 700, fontSize: 22, marginBottom: 16 }}>Join a Watch Party</div>
+        <form onSubmit={handleMeetingIdSubmit}>
+          <label style={{ fontWeight: 500, fontSize: 16 }}>Enter Meeting ID:</label>
+          <input
+            type="text"
+            value={meetingIdInput}
+            onChange={e => setMeetingIdInput(e.target.value)}
+            placeholder="e.g. party123"
+            style={{ margin: '16px 0', width: '100%', padding: '0.7rem', borderRadius: 8, border: '1px solid #ccc', fontSize: 16 }}
+          />
+          <button className="accent-gradient" type="submit" style={{ width: '100%' }}>Join</button>
+        </form>
+        <div style={{ color: 'var(--color-error)', marginTop: 16 }}>
+          Missing or invalid room parameter. Please enter your Meeting ID.
+        </div>
+      </div>
+    );
   }
 
   return (
