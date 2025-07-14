@@ -4,26 +4,59 @@ import useYouTubePlayer from './useYouTubePlayer';
 import useSocket from './useSocket';
 import RoomLinkGenerator from './RoomLinkGenerator';
 import './index.css';
+import logo from './assets/logo.png';
+import timeIcon from './assets/time.png';
+import phoneIcon from './assets/cell-phone.png';
+import userIcon from './assets/user.png';
 
 function LandingPage() {
+  const fullText = 'Watch Together. Anywhere.';
+  const [displayed, setDisplayed] = useState('');
+
+  useEffect(() => {
+    setDisplayed('');
+    let i = 0;
+    const interval = setInterval(() => {
+      setDisplayed(fullText.slice(0, i + 1));
+      i++;
+      if (i === fullText.length) clearInterval(interval);
+    }, 80);
+    return () => clearInterval(interval);
+  }, []);
+
   return (
     <div className="hero">
-      <div className="hero-title">Watch Together. Anywhere.</div>
-      <div className="hero-subtitle">Host a synchronized watch party with friends, family, or your community. Enjoy a premium, cinematic experience—no matter where you are.</div>
-      <div style={{ display: 'flex', gap: '1.5rem', justifyContent: 'center', marginBottom: '2rem' }}>
-        <Link to="/host"><button className="accent-gradient">Start Watch Party</button></Link>
-        <Link to="/watch"><button className="accent-gradient" style={{ background: 'var(--color-accent2)', color: '#fff' }}>Join Party</button></Link>
+      <div className="hero-title">
+        {displayed}
+        <span
+          style={{
+            display: 'inline-block',
+            width: '1ch',
+            background: 'currentColor',
+            height: '1.1em',
+            marginLeft: 2,
+            animation: 'blink 1s steps(1) infinite',
+            verticalAlign: 'middle',
+          }}
+        ></span>
+      </div>
+      <div className="hero-subtitle subheading">
+        Watch, chat, and connect—together, from anywhere.
+      </div>
+      <div className="button-row">
+        <Link to="/host"><button className="button-primary">Start Watch Party</button></Link>
+        <Link to="/watch"><button className="button-secondary">Join Party</button></Link>
       </div>
       <div className="feature-list">
         <div className="feature-card">
-          <span role="img" aria-label="sync" style={{ fontSize: 32 }}>⏱️</span>
-          <div style={{ fontWeight: 600, marginTop: 8 }}>Sync Playback</div>
-          <div style={{ color: 'var(--color-text-muted)', fontSize: 14 }}>Everyone stays in perfect sync</div>
+          <img src={timeIcon} alt="Sync Playback" className="feature-icon" style={{ height: 44, width: 44, marginBottom: 8 }} />
+          <div className="feature-label" style={{ color: '#000' }}>Sync Playback</div>
+          <div className="feature-desc" style={{ color: '#222' }}>Everyone stays in perfect sync</div>
         </div>
         <div className="feature-card">
-          <span role="img" aria-label="mobile" style={{ fontSize: 32 }}>📱</span>
-          <div style={{ fontWeight: 600, marginTop: 8 }}>Mobile Friendly</div>
-          <div style={{ color: 'var(--color-text-muted)', fontSize: 14 }}>Works beautifully on any device</div>
+          <img src={phoneIcon} alt="Mobile Friendly" className="feature-icon" style={{ height: 44, width: 44, marginBottom: 8 }} />
+          <div className="feature-label" style={{ color: '#000' }}>Mobile Friendly</div>
+          <div className="feature-desc" style={{ color: '#222' }}>Works beautifully on any device</div>
         </div>
       </div>
     </div>
@@ -55,6 +88,7 @@ function HostPage() {
       onStateChange: onPlayerStateChange,
     },
   });
+  const [copied, setCopied] = useState(false);
 
   useEffect(() => {
     if (socket && meetingId) {
@@ -109,32 +143,55 @@ function HostPage() {
     return () => clearInterval(interval);
   }, [meetingId, playerRef, emitPing]);
 
+  // Copy to clipboard handler
+  const handleCopy = async () => {
+    try {
+      await navigator.clipboard.writeText(meetingId);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 1500);
+    } catch (err) {
+      setCopied(false);
+    }
+  };
+
   return (
-    <div style={{ maxWidth: 900, margin: '0 auto', padding: '2rem 1rem' }}>
-      <div className="glass-card" style={{ marginBottom: 32 }}>
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap' }}>
-          <div style={{ fontWeight: 700, fontSize: 22 }}>Host Dashboard</div>
-          <div style={{ color: 'var(--color-success)', fontWeight: 600, fontSize: 16 }}>
-            Room Status: <span style={{ color: '#2ec4b6' }}>{meetingId ? 'Live' : 'Not started'}</span>
+    <div style={{ maxWidth: 700, margin: '0 auto', padding: '2rem 1rem' }}>
+      <div className="host-dashboard-card">
+        <div className="host-dashboard-title">Host Dashboard</div>
+        <div className="host-dashboard-topbar">
+          <img src={userIcon} alt="Host" className="host-icon-img" style={{ height: 32, width: 32, borderRadius: '50%', objectFit: 'cover' }} />
+        </div>
+        <div className="pill-badge">
+          <span className="live-dot"></span>
+          Room Status: Live
+        </div>
+        <div className="section-divider"></div>
+        <div className="room-code-label">Room Code</div>
+        <div className="room-code-row">
+          <span className="room-code-box" tabIndex={0}>{meetingId}</span>
+          <button className="copy-id-btn" onClick={handleCopy}>
+            <span role="img" aria-label="copy">📋</span> Copy ID
+          </button>
+          {copied && <span style={{ color: 'var(--color-success)', marginLeft: 8, fontWeight: 500 }}>Copied!</span>}
+        </div>
+        <div className="section-divider"></div>
+        <form onSubmit={handleVideoInputSubmit}>
+          <div className="video-input-label">Enter a YouTube video link:</div>
+          <div className="video-input-row">
+            <input
+              type="text"
+              value={videoInput}
+              onChange={e => setVideoInput(e.target.value)}
+              placeholder="https://www.youtube.com/watch?v=..."
+              className="video-input-field"
+            />
+            <button className="load-video-btn" type="submit">
+              <span role="img" aria-label="load">▶️</span> Load Video
+            </button>
           </div>
-        </div>
-        <div style={{ marginTop: 12, color: 'var(--color-text-muted)' }}>
-          Room Code: {meetingId}
-        </div>
+          {status && <div style={{ color: 'var(--color-success)', marginTop: 8 }}>{status}</div>}
+        </form>
       </div>
-      <RoomLinkGenerator meetingId={meetingId} />
-      <form onSubmit={handleVideoInputSubmit} className="glass-card" style={{ maxWidth: 500, margin: '0 auto', marginBottom: 32 }}>
-        <label style={{ fontWeight: 600, fontSize: 18 }}>Enter a YouTube video link:</label>
-        <input
-          type="text"
-          value={videoInput}
-          onChange={e => setVideoInput(e.target.value)}
-          placeholder="https://www.youtube.com/watch?v=..."
-          style={{ margin: '16px 0', width: '100%', padding: '0.7rem', borderRadius: 8, border: 'none', fontSize: 16 }}
-        />
-        <button className="accent-gradient" type="submit" style={{ width: '100%' }}>Load Video</button>
-        {status && <div style={{ color: 'var(--color-success)', marginTop: 8 }}>{status}</div>}
-      </form>
       {videoId && (
         <div className="glass-card" style={{ margin: '0 auto', maxWidth: 700, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
           <div style={{ fontWeight: 600, fontSize: 18, marginBottom: 8 }}>Now Playing</div>
@@ -350,12 +407,28 @@ function extractYouTubeVideoId(url) {
 function App() {
   return (
     <Router>
-      <nav style={{ marginBottom: 20, background: 'rgba(30,30,40,0.7)', padding: '1rem 0', boxShadow: '0 2px 12px 0 rgba(127,90,240,0.08)' }}>
-        <div style={{ maxWidth: 1200, margin: '0 auto', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-          <Link to="/" style={{ fontWeight: 800, fontSize: 24, color: 'var(--color-accent)', textDecoration: 'none', letterSpacing: '-1px' }}>WatchParty</Link>
+      <nav style={{
+        position: 'fixed',
+        top: 20,
+        left: '50%',
+        transform: 'translateX(-50%)',
+        zIndex: 1000,
+        marginBottom: 20,
+        background: '#2b2d42',
+        padding: '0.5rem 0',
+        boxShadow: '0 4px 24px 0 rgba(30,30,40,0.18)',
+        borderRadius: 32,
+        width: 'calc(100% - 48px)',
+        maxWidth: 900,
+        border: '2px solid #8d99ae',
+      }}>
+        <div style={{ maxWidth: 900, margin: '0 auto', display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0 48px' }}>
+          <Link to="/" className="navbar-btn navbar-btn-home" style={{ display: 'flex', alignItems: 'center', textDecoration: 'none', border: 'none', background: 'transparent', padding: 0 }}>
+            <img src={logo} alt="PlayPal logo" style={{ height: 38, marginRight: 0, verticalAlign: 'middle' }} />
+          </Link>
           <div style={{ display: 'flex', gap: 18 }}>
-            <Link to="/host" className="accent-gradient" style={{ fontSize: 16, padding: '0.5rem 1.2rem' }}>Host</Link>
-            <Link to="/watch" className="accent-gradient" style={{ fontSize: 16, padding: '0.5rem 1.2rem', background: 'var(--color-accent2)' }}>Watch</Link>
+            <Link to="/host" className="navbar-btn navbar-btn-host">Host</Link>
+            <Link to="/watch" className="navbar-btn navbar-btn-watch">Watch</Link>
           </div>
         </div>
       </nav>

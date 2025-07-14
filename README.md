@@ -1,4 +1,6 @@
-# React + Vite
+# PlayPal
+
+PlayPal is a watch party app that lets you watch, chat, and connect—together, from anywhere.
 
 This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
 
