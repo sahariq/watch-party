@@ -8,6 +8,8 @@ import logo from './assets/logo.png';
 import timeIcon from './assets/time.png';
 import phoneIcon from './assets/cell-phone.png';
 import userIcon from './assets/user.png';
+import copyIcon from './assets/copy.png';
+import playIcon from './assets/play-button.png';
 
 function LandingPage() {
   const fullText = 'Watch Together. Anywhere.';
@@ -155,11 +157,30 @@ function HostPage() {
   };
 
   return (
-    <div style={{ maxWidth: 700, margin: '0 auto', padding: '2rem 1rem' }}>
+    <div style={{ maxWidth: 700, margin: '0 auto', padding: '5rem 1rem' }}>
       <div className="host-dashboard-card">
-        <div className="host-dashboard-title">Host Dashboard</div>
-        <div className="host-dashboard-topbar">
-          <img src={userIcon} alt="Host" className="host-icon-img" style={{ height: 32, width: 32, borderRadius: '50%', objectFit: 'cover' }} />
+        <div className="host-dashboard-title" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 14 }}>
+          <div id="ransomizer-wtsjt9m7" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', textAlign: 'center', fontSize: 50 }}>
+            <div className="ts">
+              <div className="tw">
+                <div data-text="H" className="mlvx-0 tc"><div data-text="H">H</div></div>
+                <div data-text="o" className="mlvx-1 tc"><div data-text="o">o</div></div>
+                <div data-text="s" className="mlvx-2 tc"><div data-text="s">s</div></div>
+                <div data-text="t" className="mlvx-3 tc"><div data-text="t">t</div></div>
+              </div>
+              <div className="tw">
+                <div data-text="D" className="mlvx-5 tc"><div data-text="D">D</div></div>
+                <div data-text="a" className="mlvx-6 tc"><div data-text="a">a</div></div>
+                <div data-text="s" className="mlvx-7 tc"><div data-text="s">s</div></div>
+                <div data-text="h" className="mlvx-8 tc"><div data-text="h">h</div></div>
+                <div data-text="b" className="mlvx-9 tc"><div data-text="b">b</div></div>
+                <div data-text="o" className="mlvx-10 tc"><div data-text="o">o</div></div>
+                <div data-text="a" className="mlvx-11 tc"><div data-text="a">a</div></div>
+                <div data-text="r" className="mlvx-12 tc"><div data-text="r">r</div></div>
+                <div data-text="d" className="mlvx-13 tc"><div data-text="d">d</div></div>
+              </div>
+            </div>
+          </div>
         </div>
         <div className="pill-badge">
           <span className="live-dot"></span>
@@ -170,7 +191,7 @@ function HostPage() {
         <div className="room-code-row">
           <span className="room-code-box" tabIndex={0}>{meetingId}</span>
           <button className="copy-id-btn" onClick={handleCopy}>
-            <span role="img" aria-label="copy">📋</span> Copy ID
+            <img src={copyIcon} alt="Copy" style={{ height: 18, width: 18, marginRight: 6 }} /> Copy ID
           </button>
           {copied && <span style={{ color: 'var(--color-success)', marginLeft: 8, fontWeight: 500 }}>Copied!</span>}
         </div>
@@ -186,10 +207,14 @@ function HostPage() {
               className="video-input-field"
             />
             <button className="load-video-btn" type="submit">
-              <span role="img" aria-label="load">▶️</span> Load Video
+              <img src={playIcon} alt="Load" style={{ height: 20, width: 20, marginRight: 6 }} /> Load Video
             </button>
           </div>
-          {status && <div style={{ color: 'var(--color-success)', marginTop: 8 }}>{status}</div>}
+          {status && (
+            <div style={{ color: (status === 'Player ready. Use controls to start playback.' || status === 'Ready') ? '#222' : 'var(--color-success)', marginTop: 8 }}>
+              {status}
+            </div>
+          )}
         </form>
       </div>
       {videoId && (
